@@ -53,11 +53,11 @@ exports.generateInvoicePDF = async (req, res) => {
 
     // ✅ Launch browser with chrome-aws-lambda
     const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-    });
+  args: chromium.args,
+  defaultViewport: chromium.defaultViewport,
+  executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
+  headless: chromium.headless,
+});
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
