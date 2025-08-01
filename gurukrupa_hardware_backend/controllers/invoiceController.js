@@ -1,9 +1,7 @@
-// controllers/invoiceController.js
-
-const chromium = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const path = require('path');
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
 
 exports.generateInvoicePDF = async (req, res) => {
   const data = req.body;
@@ -11,6 +9,7 @@ exports.generateInvoicePDF = async (req, res) => {
   try {
     let html = fs.readFileSync(path.join(__dirname, '../templates/invoiceTemplate.html'), 'utf8');
 
+    // Replace placeholders
     html = html.replace('{{customer}}', data.customer || '');
     html = html.replace('{{invoice}}', data.invoice || '');
     html = html.replace('{{date}}', data.invoiceDate || '');
@@ -52,12 +51,12 @@ exports.generateInvoicePDF = async (req, res) => {
 
     html = html.replace(/{{#each products}}([\s\S]*?){{\/each}}/, productRows);
 
-    // ✅ Render-friendly Puppeteer config
+    // ✅ Launch browser with chrome-aws-lambda
     const browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
       headless: chromium.headless,
-      defaultViewport: chromium.defaultViewport
     });
 
     const page = await browser.newPage();
