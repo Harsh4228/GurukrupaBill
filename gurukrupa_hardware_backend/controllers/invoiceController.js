@@ -1,4 +1,7 @@
-const puppeteer = require('puppeteer');
+// controllers/invoiceController.js
+
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,7 +11,6 @@ exports.generateInvoicePDF = async (req, res) => {
   try {
     let html = fs.readFileSync(path.join(__dirname, '../templates/invoiceTemplate.html'), 'utf8');
 
-    // Replace simple placeholders
     html = html.replace('{{customer}}', data.customer || '');
     html = html.replace('{{invoice}}', data.invoice || '');
     html = html.replace('{{date}}', data.invoiceDate || '');
@@ -35,7 +37,6 @@ exports.generateInvoicePDF = async (req, res) => {
     html = html.replace('{{grandTotal}}', data.grandTotal || '0.00');
     html = html.replace('{{note}}', data.note || '');
 
-    // Generate product rows
     const productRows = data.products.map((p, index) => `
       <tr>
         <td>${index + 1}</td>
@@ -51,10 +52,12 @@ exports.generateInvoicePDF = async (req, res) => {
 
     html = html.replace(/{{#each products}}([\s\S]*?){{\/each}}/, productRows);
 
-    // ✅ Launch Puppeteer with correct config for Render
+    // ✅ Render-friendly Puppeteer config
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: chromium.args,
+      executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
+      headless: chromium.headless,
+      defaultViewport: chromium.defaultViewport
     });
 
     const page = await browser.newPage();
