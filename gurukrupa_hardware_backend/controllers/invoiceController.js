@@ -25,19 +25,17 @@ exports.generateInvoicePDF = async (req, res) => {
     html = html.replace('{{ifsc}}', data.ifsc || '');
     html = html.replace('{{pf}}', data.pf || '');
     html = html.replace('{{subTotal}}', data.subTotal || '0.00');
-    html = html.replace('{{subTotal}}', data.subTotal || '0.00');
     html = html.replace('{{cgst}}', data.cgst || '0.00');
     html = html.replace('{{sgst}}', data.sgst || '0.00');
     html = html.replace('{{cgstRate}}', data.cgstRate || '0.00');
     html = html.replace('{{sgstRate}}', data.sgstRate || '0.00');
-    html = html.replace('{{mygst}}',  '3456789098765');
-
+    html = html.replace('{{mygst}}', '3456789098765');
     html = html.replace('{{roundOff}}', data.roundOff || '0.00');
     html = html.replace('{{totalGst}}', (parseFloat(data.cgst || 0) + parseFloat(data.sgst || 0)).toFixed(2));
     html = html.replace('{{grandTotal}}', data.grandTotal || '0.00');
     html = html.replace('{{note}}', data.note || '');
 
-    // Generate product rows manually
+    // Generate product rows
     const productRows = data.products.map((p, index) => `
       <tr>
         <td>${index + 1}</td>
@@ -53,8 +51,12 @@ exports.generateInvoicePDF = async (req, res) => {
 
     html = html.replace(/{{#each products}}([\s\S]*?){{\/each}}/, productRows);
 
-    // Launch Puppeteer and generate PDF
-    const browser = await puppeteer.launch();
+    // ✅ Launch Puppeteer with correct config for Render
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
 
